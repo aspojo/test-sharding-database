@@ -1,0 +1,42 @@
+spring:
+  shardingsphere:
+    # 输出sql语句
+    props:
+      sql-show: true
+    datasource:
+      common:
+#        driver-class-name: com.mysql.cj.jdbc.Driver
+        type: com.zaxxer.hikari.HikariDataSource
+      names: db0,db1
+      db0:
+        jdbc-url: jdbc:mysql://127.0.0.1:3306/ds_0?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=GMT%2b8
+        username: root
+        password:
+      db1:
+        jdbc-url: jdbc:mysql://127.0.0.1:3306/ds_1?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=GMT%2b8
+        username: root
+        password:
+    rules:
+      sharding:
+        key-generators:
+          snowflake:
+            type: SNOWFLAKE
+            props:
+              worker-id: 123
+        sharding-algorithms:
+          database-inline:
+            type: INLINE
+            props:
+              algorithm-expression: db$->{user_id % 2}
+        tables:
+          t_order:
+            # 配置t_order的分表的规则
+            actual-data-nodes: db$->{0..1}.t_order0
+            database-strategy:
+              standard:
+                sharding-column: user_id
+                sharding-algorithm-name: database-inline
+            keyGenerateStrategy:
+              column: order_id
+              keyGeneratorName: snowflake
+    enabled: true
